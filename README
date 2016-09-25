@@ -1,0 +1,6 @@
+This Program was developed using Python 2.7, numpy 1.6.1, and python wrappers for opencv 2.4.  The program is in three files: queue.py,
+tonemap.py and gausskern.py.  To run the program, from a directory containing these three files, type:
+
+>python queue.py
+
+

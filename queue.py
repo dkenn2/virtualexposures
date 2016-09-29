@@ -7,6 +7,14 @@ from tonemap import findTargetLuminances,tonemapSpatiallyUniform
 from gausskern import getNeighborhoodDiffs,calcTempStdDevGetKernel
 
 def astaFilter(frame_window, targetnums):
+  """Takes as argument a frame_window which has the current video frame and its surrounding
+  frames.  The targetnums argument is a 2d array containing the target number of pixels to
+  combine for each pixel in the frame. The function first runs the temporal filter to average 
+  the values of each pixel across time.  Then, for each pixel, it will run the spatial
+  filter for that pixel at a strength inversely proportional to how many pixels
+  could be combined with the temporal filter.  Finally, it returns a 2d array of all the pixels
+  for a given video frame calculated by this filter"""
+
   frame = frame_window.getMainFrame()
   lum = frame[:,:,0]
 
@@ -24,7 +32,7 @@ def astaFilter(frame_window, targetnums):
   return result_frame
   
 def spatialFilter(temp_filtered_frame, distances_short_of_targets):
-  """This function chooses a value for the final value with either no
+  """This function chooses a final pixel value with either no
   spatial filtering, or varying degrees of spatial filtering depending
   on how short the temporal filter came to gathering enough pixels"""
 
@@ -118,7 +126,12 @@ def lookupOneTarget(filter_key,kernel_dict):
   return kernel_dict[filter_key][0]
     
 def rearrangeGaussianKernels(all_kernels, distance_off_center):
-
+  """This function is called when the window of surrounding frames
+  needed to process a frame is too large to symmetrically take the same
+  number of frames from before and after the current frame.  This function
+  will rearrange the gaussian kernel in these situations so that the weight
+  of each frame still decreases with temporal distance from the current frame."""
+ 
   resorted_kernels = []
   
   if distance_off_center == 0:

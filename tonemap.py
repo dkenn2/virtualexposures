@@ -44,7 +44,6 @@ def tonemapSpatiallyUniform(vidFrame):
   return vidFrame
 
 if __name__ == "__main__":
-
   
   for i in xrange(0,255):
     print i, " ",toneMap(i,40) * 255

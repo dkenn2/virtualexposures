@@ -31,7 +31,8 @@ def calcTempStdDevGetKernel(target_num,window_size):
     sys.exit()
 
   #paper changes both neighborhood size and std dev dynamically..
-  #I have a fixed size neighborhood and just change std dev
+  #I have a fixed size neighborhood and just change std dev dynamically
+
   if window_size < 19: #if I want smaller window must change atten
     sys.stderr.write("window size is too small to handle all cases")
     sys.exit()
@@ -87,7 +88,7 @@ def getNeighborhoodDiffs(neighborhood_1, neighborhood_2,min_diff,max_diff):
   neighborhood_diffs = np.abs(neighborhood_1 - neighborhood_2)
 
   #from paper: "The neighborhood size, often between 3 and 5, can be 
-  #varied depending on noise as can [std_dev] (usually between 2 and 6
+  #varied depending on noise as can [std_dev] (usually between 2 and 6)
   g_kernel = getNeighborhoodCompareKernel(5,2) 
 
   #TODO: do i really want BORDER_REPLICATE?
@@ -105,6 +106,8 @@ def getNeighborhoodDiffs(neighborhood_1, neighborhood_2,min_diff,max_diff):
   return values
 
 def distanceMetric(distance,min,max):
+  """Parallel version of sequential distanceMetric2
+  function below."""
 
   distance = distance - min
   max = max - min
@@ -133,56 +136,14 @@ def distanceMetric2(distance,min,max):
   return (max - distance) / max
 
 if __name__ == "__main__":
+
   for i in xrange(1, 20):
     print "MIN 4, MAX 16, ARG ",str(i),"=",distanceMetric(i,4,16)
-    
     print "MIN 4, MAX 16, ARG ",str(i),".5=",distanceMetric(i+.5,4,16)
-
-  std_dev = 2 
-#  kernel_t = cv2.getGaussianKernel(9,std_dev)
-
-  
-#  a = getNeighborhoodCompareKernel(4, 2)
   
   j = np.array(([[1.0,2.0,3.0],[4.0,5.0,6.0],[7.0,8.0,9.0]]))
-  k = np.array(([[3,5,2],[9,5,6],[1,8,9]]))
-  print j
   l = np.array(([[1.0,2.0,3.0],[4.0,5.0,6.0],[7.0,8.0,9.0]]))
 
-  print k
-  #should be zero in each (which is one) 
   print  getNeighborhoodDiffs(j,l,4, 16)
 
-
-  #getNeighborhoodDiffs(l,j)
-  #these approximate how for off I will be and still want to take it
-  #almost completely
-  m = np.array(([[1,2,3,4,5],[4,8,8,9,10],[11,12,13,14,15]]))
-
-  n = np.array(([[1,2,3,3,4],[6,7,8,9,10],[11,12,13,14,15]]))
-
-  print m,n
-#  print getNeighborhoodDiffs(m,n,2, 8)
-
-#  getNeighborhoodDiffs(n,m,2,8)
-
-  #p and q are so far apart that should be almost zero   
-  p = np.array(([[1,2,3,4,5],[4,8,8,9,10],[11,12,13,14,15]]))
-
-  q = p + 20 
-
-  print p
-  print q
-  
-#  print getNeighborhoodDiffs(p,q,2,8)
-#  print getNeighborhoodDiffs(q,p,2,8)
-
-  s =  np.array(([[1,2,11,10,5],[12,7,8,9,10],[11,12,13,14,15]]))
- 
-  r =  np.array(([[15,14,11,11,11],[6,7,8,8,6],[5,4,12,12,1]]))
-  print s
-  print r
-#  print  getNeighborhoodDiffs(s,r,4,9)
-#  print   getNeighborhoodDiffs(r,s,4,9)
-  print "EEE"
   print calcTempStdDevGetKernel(2.0,19)

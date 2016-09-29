@@ -12,7 +12,6 @@ def astaFilter(frame_window, targetnums):
 
   (numerators, normalizers), short_of_target = temporalFilter(frame_window,
                                                             targetnums,92)
-  print "ORIGINAL: ",lum
 
   #I AM LOSING INFO HERE BY ROUNDING BEFORE THE BILATERAL...PROBLEM?
   temp_filtered_lum = np.rint(numerators / normalizers)
@@ -20,11 +19,7 @@ def astaFilter(frame_window, targetnums):
   #put back together bc spatial filter on lum and chrom, not just lum
   frame[:,:,0] = temp_filtered_lum
   
-  print "TEMP_FILTERED: ",frame[:,:,0] 
-
   result_frame = spatialFilter(frame,short_of_target)
-
-  print "TEMP_AND_SPACE_FILTERED: ", result_frame[:,:,0]
 
   return result_frame
   
@@ -35,21 +30,21 @@ def spatialFilter(temp_filtered_frame, distances_short_of_targets):
 
  
   #TODO: add a median filtering step before bilateral filter step
+
   some_filtering = cv2.bilateralFilter(temp_filtered_frame,5,30,0)
   lots_filtering = cv2.bilateralFilter(temp_filtered_frame,7,55,0)
 
-  #need three channels of distances short because spatial filter 
-  #is on all channels
-   
+  #need three channels of distances because spatial filter done on all 3  
   dists_short = np.repeat(distances_short_of_targets[:,:,np.newaxis],3,axis=2)
+
   #this is used as a cutoff for spots where no further filtering required
   min_values = np.zeros_like(dists_short)
   min_values.fill(.1)
+
   not_short_elems = np.less(dists_short,min_values)
+
   temp_filter_vals_added = np.where(not_short_elems,temp_filtered_frame,
                                      np.zeros_like(temp_filtered_frame))
-
-  print "FIRST: ", np.count_nonzero(temp_filter_vals_added)
 
   middles = np.zeros_like(dists_short)
   middles.fill(0.45)
@@ -63,15 +58,9 @@ def spatialFilter(temp_filtered_frame, distances_short_of_targets):
                                         some_filtering,temp_filter_vals_added)
 
 
-  
-  print "SECOND: ", np.count_nonzero(some_space_filter_vals_added)
-  
-
   a_lot_short_elems = np.greater_equal(dists_short,middles)
   lots_space_filter_vals_added = np.where(a_lot_short_elems, lots_filtering,
                                          some_space_filter_vals_added)
-
-  print "THIRD: ", np.count_nonzero(lots_space_filter_vals_added)
 
   return lots_space_filter_vals_added
  
@@ -179,12 +168,14 @@ def getWeightsList(index,kernel_dict):
     weights_list.append(kernel_dict[key][1].item(index))
 
   return weights_list
-#TODO: make this less hard-coded --i did and found it less clear
+
+
 def makeWeightsArray(filter_keys, weights_list):
-  """Takes a numpy array of equal dimension to the pixel lum array filled with values of approximately
+  """Takes a numpy array of equal dimension to the pixel lum array filled with values of about 
   how many pixels need to be combined at each pixel (filter_keys).  Associates these with
-  the correct elements in weights_list which holds the gaussian weights for the
-  different filter_keys.  Will return a numpy array of pixel lum size with values of spatial gaussian weights"""
+  the correct elements in weights_list which holds the gaussian weights for the different
+  filter_keys.  Will return a numpy array of pixel lum size with values of spatial gaussian weights"""
+
   weights_list.reverse()
 
   filter_keys[filter_keys > 8.6] = weights_list[0] #9.0 weight
@@ -205,7 +196,6 @@ def makeWeightsArray(filter_keys, weights_list):
   filter_keys[filter_keys > 1.1] = weights_list[15] #1.5 weight
   filter_keys[filter_keys == 1.0] = weights_list[16] #1.0 weight
   
-  #OR IS IT BETTER NOT TO RETURN TO SHOW MODDED IN PLACE?
   return filter_keys
 
 def nearestFilterKeys(target_nums):
@@ -286,8 +276,6 @@ class FrameQueue(object):
   in the beginning and the end when we have to communicate that the current frmae
   is not in the middle of the window"""      
   def getNextFrame(self):
-    print "\nWHERE IM LOOKING",self.current_frame
-    print "TOTAL", self.frames_in_video
     if self.current_frame > self.frames_in_video:
       return None
     half_window = self.frames_in_window // 2 + 1
@@ -319,9 +307,6 @@ class FrameWindow(object):
 
     self.frame_list = frame_list
     self.curr_frame_index = curr_frame_index - 1
-    print "CURRENT INDEX!!!!!", self.curr_frame_index
-    print "LENGTH", self.getLength()
-    print "EDGE INDEX", self.isFrameAtEdges()
 
   def getMainFrame(self):
 

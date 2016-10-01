@@ -20,7 +20,7 @@ class FrameQueue(object):
     if surrounding_frame_count % 2 == 0:
       surrounding_frame_count += 1
 
-    self.frames_in_window = surrounding_frame_coun
+    self.frames_in_window = surrounding_frame_count
 
     self.frames_in_video = self.countFrames(video_filename)
 

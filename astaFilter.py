@@ -27,6 +27,8 @@ def astaFilter(frame_window, targetnums):
   result_frame = spatialFilter(frame,short_of_target)
 
   return result_frame
+
+
   
 def spatialFilter(temp_filtered_frame, distances_short_of_targets):
   """This function chooses a final pixel value with either no
@@ -41,6 +43,7 @@ def spatialFilter(temp_filtered_frame, distances_short_of_targets):
 
   #need three channels of distances because spatial filter done on all 3  
   dists_short = np.repeat(distances_short_of_targets[:,:,np.newaxis],3,axis=2)
+
 
   #this is used as a cutoff for spots where no further filtering required
   min_values = np.zeros_like(dists_short)
@@ -76,20 +79,9 @@ def temporalFilter(frame_window,targetnums, max_error):
     frame = frame_window.getMainFrame()
     lum = frame[:,:,0]
 
-    kernel_keys = []
-    all_kernels = []
 
-    for i in xrange(2,19):
-      kernel_keys.append(i/2)
-      all_kernels.append(calcTempStdDevGetKernel(i/2,frame_window.getLength()))
-      
-    if frame_window.isFrameAtEdges() != 0: #if near begin or end of video
+    kernel_dict = makeGaussianKernels(frame_window)
 
-      all_kernels = rearrangeGaussianKernels(all_kernels,
-                                         frame_window.isFrameAtEdges())
-   
-
-    kernel_dict = dict(zip(kernel_keys,all_kernels))
     filter_keys = nearestFilterKeys(targetnums)
 
     numerators = 0.0
@@ -115,14 +107,36 @@ def temporalFilter(frame_window,targetnums, max_error):
     
     return (numerators,normalizers), distances_short_of_target
 
+
 def lookupTargets(filter_keys,kernel_dict):
   lookupTargetVectorized = np.vectorize(lookupOneTarget)
   return lookupTargetVectorized(filter_keys,kernel_dict)
 
+
 def lookupOneTarget(filter_key,kernel_dict):
   return kernel_dict[filter_key][0]
+
+
+def makeGaussianKernels(frame_window):
     
+
+    for i in xrange(2,19):  #builds 1-d gaussian kernels of length equal to frame window size 
+      kernel_keys.append(i/2)  #with std. devs between .5 and 9.5
+      all_kernels.append(calcTempStdDevGetKernel(i/2,frame_window.getLength()))
+      
+
+    if frame_window.isFrameAtEdges() != 0: #if near begin or end of video
+      all_kernels = rearrangeGaussianKernels(all_kernels,
+                                         frame_window.isFrameAtEdges())
+   
+    kernel_dict = dict(zip(kernel_keys,all_kernels))
+
+    return kernel_dict 
+
+
 def rearrangeGaussianKernels(all_kernels, distance_off_center):
+
+
   """This function is called when the window of surrounding frames
   needed to process a frame is too large to symmetrically take the same
   number of frames from before and after the current frame.  This function

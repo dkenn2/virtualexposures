@@ -73,39 +73,54 @@ def spatialFilter(temp_filtered_frame, distances_short_of_targets):
   return lots_space_filter_vals_added
  
 def temporalFilter(frame_window,targetnums, max_error):
+   """This function averages the current frame pixel intensity values with the values of the same
+   pixel in surrounding frames.  It takes a gaussian average of these nearby pixels with weight
+   decreasing with temporal distance from current frame being processed.  It will only take nearby
+   pixels with similar neighborhoods and ignore those with very different neighborhoods.  It takes
+   as argument (1) the window of surrounding frames, (2) a 2d targetnums array with the approximate number of pixels
+   that must be averaged at each pixel and (3) a max_error which determines how similar temporally adjacent
+   frames must be for them to be included in the average of nearby pixels.  This function returns both the 
+   temporally averaged pixel values and how short we were from combining enough pixels at each location with this temporal step."""
 
 #TODO 1:  is there a way to automatically determine max_error rather
 #than just I have to figure it out?  may not generalize from one video to a different video
     frame = frame_window.getMainFrame()
     lum = frame[:,:,0]
 
-
     kernel_dict = makeGaussianKernels(frame_window)
 
-    filter_keys = nearestFilterKeys(targetnums)
+    filter_keys = getNearestFilterKeys(targetnums)
 
-    numerators = 0.0
-    normalizers = 0.0
+    numerators, normalizers = averageTemporallyAdjacentPixels(frame_window,kernel_dict,filter_keys,max_error)
 
-    for i in xrange(0,len(frame_window.frame_list)):
-
-      other_frame = frame_window.frame_list[i]
-      other_lum = other_frame[:,:,0]
-      
-      curr_gauss_weights = getWeightsList(i,kernel_dict)
-      frame_distance_weights = np.copy(filter_keys) #need filter_keys later so copy
-      makeWeightsArray(frame_distance_weights,curr_gauss_weights) #in-place change
- 
-      pixel_distance_weights = getNeighborhoodDiffs(lum,other_lum, 50, max_error)
-      total_gaussian_weights = pixel_distance_weights * frame_distance_weights
-
-      normalizers += total_gaussian_weights
-      numerators += other_lum * total_gaussian_weights
-
+    #calculate how short we are in the number of pixels we could average to determine how much to use spatial filter
     targets_for_pixels = lookupTargets(filter_keys,kernel_dict)
     distances_short_of_target = targets_for_pixels - normalizers
     
     return (numerators,normalizers), distances_short_of_target
+
+
+
+def averageTemporallyAdjacentPixels(frame_window, kernel_dict, filter_keys,max_error):
+
+  numerators, normalizers = 0.0
+
+  for i in xrange(0,len(frame_window.frame_list)):
+
+    other_frame = frame_window.frame_list[i]
+    other_lum = other_frame[:,:,0]
+      
+    curr_gauss_weights = getWeightsList(i,kernel_dict)
+    frame_distance_weights = np.copy(filter_keys) #need filter_keys later so copy
+    makeWeightsArray(frame_distance_weights,curr_gauss_weights) #in-place change
+ 
+    pixel_distance_weights = getNeighborhoodDiffs(lum,other_lum, 50, max_error)
+    total_gaussian_weights = pixel_distance_weights * frame_distance_weights
+
+    normalizers += total_gaussian_weights
+    numerators += other_lum * total_gaussian_weights
+
+  return numerators, normalizers
 
 
 def lookupTargets(filter_keys,kernel_dict):
@@ -222,7 +237,7 @@ def makeWeightsArray(filter_keys, weights_list):
   
   return filter_keys
 
-def nearestFilterKeys(target_nums):
+def getNearestFilterKeys(target_nums):
   """Keys in the filter dict are at 1, 1.5, 2, etc..."""
   return np.round(target_nums * 2) / 2
   

@@ -13,7 +13,6 @@ def astaFilter(frame_window, targetnums):
   for a given video frame calculated by this filter"""
 
   frame = frame_window.getMainFrame()
-  lum = frame[:,:,0]
 
   (numerators, normalizers), short_of_target = temporalFilter(frame_window,
                                                             targetnums,92)
@@ -84,26 +83,28 @@ def temporalFilter(frame_window,targetnums, max_error):
 
 #TODO 1:  is there a way to automatically determine max_error rather
 #than just I have to figure it out?  may not generalize from one video to a different video
-    frame = frame_window.getMainFrame()
-    lum = frame[:,:,0]
 
-    kernel_dict = makeGaussianKernels(frame_window)
+   kernel_dict = makeGaussianKernels(frame_window)
 
-    filter_keys = getNearestFilterKeys(targetnums)
+   filter_keys = getNearestFilterKeys(targetnums)
 
-    numerators, normalizers = averageTemporallyAdjacentPixels(frame_window,kernel_dict,filter_keys,max_error)
+   numerators, normalizers = averageTemporallyAdjacentPixels(frame_window,kernel_dict,filter_keys,max_error)
 
     #calculate how short we are in the number of pixels we could average to determine how much to use spatial filter
-    targets_for_pixels = lookupTargets(filter_keys,kernel_dict)
-    distances_short_of_target = targets_for_pixels - normalizers
+   targets_for_pixels = lookupTargets(filter_keys,kernel_dict)
+   distances_short_of_target = targets_for_pixels - normalizers
     
-    return (numerators,normalizers), distances_short_of_target
+   return (numerators,normalizers), distances_short_of_target
 
 
 
 def averageTemporallyAdjacentPixels(frame_window, kernel_dict, filter_keys,max_error):
+  
+  numerators = 0.0 
+  normalizers = 0.0
 
-  numerators, normalizers = 0.0
+  frame = frame_window.getMainFrame()
+  lum = frame[:,:,0]
 
   for i in xrange(0,len(frame_window.frame_list)):
 
@@ -133,8 +134,10 @@ def lookupOneTarget(filter_key,kernel_dict):
 
 
 def makeGaussianKernels(frame_window):
-    
 
+    kernel_keys = [] 
+    all_kernels = []
+ 
     for i in xrange(2,19):  #builds 1-d gaussian kernels of length equal to frame window size 
       kernel_keys.append(i/2)  #with std. devs between .5 and 9.5
       all_kernels.append(calcTempStdDevGetKernel(i/2,frame_window.getLength()))

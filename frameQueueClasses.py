@@ -4,7 +4,7 @@ import sys
 import faulthandler
 import numpy as np
 from tonemap import findTargetLuminances,tonemapSpatiallyUniform
-
+from astaFilter import astaFilter
  
 class FrameQueue(object):
   """Surrounding frame count is the number of frames counting itself.
@@ -143,7 +143,7 @@ if __name__ == "__main__":
 
   faulthandler.enable()
   try:
-    frame_queue = FrameQueue('bgu.MOV',19)
+    frame_queue = FrameQueue('old.avi',19)
   except ValueError as err:
     sys.stderr.write("Invalid Input File\n")
     sys.exit()
